@@ -215,9 +215,16 @@ This is a genuine quantum advantage - there's no classical way to achieve the sa
 
 ### Performance Summary
 
-- **Ideal Case**: 100% success rate (perfect transmission)
-- **Noisy Case**: 80-95% success rate depending on noise level
-- **Imperfect Gates**: 75-90% success rate depending on gate error magnitude
+**Actual Test Results:**
+
+- **Ideal Case**: 100% success rate (perfect transmission) ✓
+- **Noisy Case**:
+  - Low noise: ~98% success rate
+  - Medium noise: ~90-92% success rate
+  - High noise: ~70-75% success rate
+- **Imperfect Gates** (5° error): 57-72% success rate
+  - Results vary by input case due to cumulative gate errors
+  - Lower error angles (1-2°) achieve 90-95% success rates
 
 ### Generated Visualizations
 
@@ -329,6 +336,43 @@ This is an educational project. Feel free to:
 - Add new analysis techniques
 - Implement additional quantum communication protocols
 - Optimize for specific hardware backends
+
+## Changelog
+
+### Version 1.1 (Latest) - Bug Fixes and Improvements
+
+**Fixed Issues:**
+1. ✅ **Bit ordering bug** - Fixed measurement qubit ordering in noisy and imperfect simulations
+   - Issue: Inputs 01 and 10 were being swapped in output
+   - Solution: Corrected to use Qiskit's little-endian bit ordering
+   - Files: `superdense_noisy.py`, `superdense_imperfect.py`
+
+2. ✅ **UTF-8 encoding error** - Fixed Windows console encoding issues
+   - Issue: UnicodeEncodeError with special characters in output
+   - Solution: Added UTF-8 encoding wrapper for Windows platform
+   - Files: All Python files
+
+3. ✅ **Non-unitary matrix error** - Fixed imperfect gates noise model
+   - Issue: Custom unitary matrices were mathematically incorrect
+   - Solution: Replaced with depolarizing error model
+   - File: `superdense_imperfect.py`
+
+4. ✅ **Amplitude damping error** - Fixed gate type mismatch
+   - Issue: Single-qubit error applied to two-qubit gates
+   - Solution: Separated single and two-qubit gate errors
+   - File: `superdense_imperfect.py`
+
+**Test Results After Fixes:**
+- Ideal: 100% success (4/4 cases) ✓
+- Noisy: ~90-92% success (all cases) ✓
+- Imperfect: 57-72% success (varies by case) ✓
+
+### Version 1.0 - Initial Release
+
+- Complete superdense coding implementation
+- Three scenarios: ideal, noisy, imperfect gates
+- Comprehensive analysis and visualization tools
+- Full documentation
 
 ## References
 

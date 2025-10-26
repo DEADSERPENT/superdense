@@ -8,6 +8,14 @@ Author: DEADSERPENT
 Platform: Qiskit
 """
 
+import sys
+import io
+
+# Fix Windows console encoding
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error
@@ -120,8 +128,9 @@ class NoisySuperdenseCoding:
         """Bob decodes the message."""
         qc.cx(alice_qubit, bob_qubit)
         qc.h(alice_qubit)
-        qc.measure(alice_qubit, classical_bits[0])
-        qc.measure(bob_qubit, classical_bits[1])
+        # Fix bit ordering - Qiskit uses little-endian
+        qc.measure(alice_qubit, classical_bits[1])
+        qc.measure(bob_qubit, classical_bits[0])
 
     def run_protocol(self, bits, shots=2048, draw_circuit=True):
         """

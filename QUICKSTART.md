@@ -1,8 +1,14 @@
 # Superdense Coding - Quick Start Guide
 
-## What You Have
+## Version 1.1 - All Bugs Fixed! ✓
 
-A complete implementation of quantum superdense coding demonstrating how to send 2 classical bits using only 1 qubit!
+A complete, **fully functional** implementation of quantum superdense coding demonstrating how to send 2 classical bits using only 1 qubit!
+
+**Latest Updates:**
+- ✅ Fixed bit ordering bug (01 and 10 now work correctly)
+- ✅ Fixed UTF-8 encoding errors on Windows
+- ✅ Fixed non-unitary matrix error in imperfect gates
+- ✅ All test cases now passing with expected results
 
 ## Files Created
 

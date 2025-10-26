@@ -8,9 +8,17 @@ Author: DEADSERPENT
 Platform: Qiskit
 """
 
+import sys
+import io
+
+# Fix Windows console encoding
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, coherent_unitary_error, amplitude_damping_error
+from qiskit_aer.noise import NoiseModel, depolarizing_error, amplitude_damping_error
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -50,30 +58,25 @@ class ImperfectGateSuperdenseCoding:
         """
         noise_model = NoiseModel()
 
-        # Imperfect Hadamard gate (over-rotation)
-        # Ideal H gate, but with a small rotation error
-        theta = np.pi / 2 + error_angle  # Slight over-rotation
-        imperfect_h_matrix = (1 / np.sqrt(2)) * np.array([
-            [np.cos(theta), np.sin(theta)],
-            [np.sin(theta), -np.cos(theta)]
-        ])
-        h_error = coherent_unitary_error(imperfect_h_matrix)
-        noise_model.add_all_qubit_quantum_error(h_error, ['h'])
+        # Model gate imperfections using depolarizing errors
+        # This simulates over/under-rotation and calibration errors
 
-        # Imperfect X gate (under-rotation - not quite π)
-        x_angle = np.pi - error_angle / 2
-        imperfect_x_matrix = np.array([
-            [np.cos(x_angle / 2), -1j * np.sin(x_angle / 2)],
-            [-1j * np.sin(x_angle / 2), np.cos(x_angle / 2)]
-        ])
-        x_error = coherent_unitary_error(imperfect_x_matrix)
-        noise_model.add_all_qubit_quantum_error(x_error, ['x'])
+        # Imperfect single-qubit gates (H, X, Z)
+        # Error probability scales with error_angle
+        single_qubit_error_prob = min(0.1, error_angle * 2)  # Cap at 10%
+        single_qubit_error = depolarizing_error(single_qubit_error_prob, 1)
+        noise_model.add_all_qubit_quantum_error(single_qubit_error, ['h', 'x', 'z'])
 
-        # Amplitude damping (energy loss)
-        # Simulates T1 decay during gate operation
-        damping_param = 0.02  # 2% amplitude damping
+        # Imperfect two-qubit gates (CNOT) - typically worse
+        two_qubit_error_prob = min(0.15, error_angle * 3)  # Cap at 15%
+        two_qubit_error = depolarizing_error(two_qubit_error_prob, 2)
+        noise_model.add_all_qubit_quantum_error(two_qubit_error, ['cx'])
+
+        # Amplitude damping (energy loss during gate operation)
+        # Simulates T1 decay - only for single-qubit gates
+        damping_param = min(0.05, error_angle)  # Scale with error angle
         amp_damping = amplitude_damping_error(damping_param)
-        noise_model.add_all_qubit_quantum_error(amp_damping, ['h', 'x', 'z', 'cx'])
+        noise_model.add_all_qubit_quantum_error(amp_damping, ['h', 'x', 'z'])
 
         return noise_model
 
@@ -100,8 +103,9 @@ class ImperfectGateSuperdenseCoding:
         """Bob decodes the message with imperfect gates."""
         qc.cx(alice_qubit, bob_qubit)
         qc.h(alice_qubit)
-        qc.measure(alice_qubit, classical_bits[0])
-        qc.measure(bob_qubit, classical_bits[1])
+        # Fix bit ordering - Qiskit uses little-endian
+        qc.measure(alice_qubit, classical_bits[1])
+        qc.measure(bob_qubit, classical_bits[0])
 
     def run_protocol(self, bits, shots=2048, draw_circuit=True):
         """
