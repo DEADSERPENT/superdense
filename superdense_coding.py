@@ -11,10 +11,13 @@ Platform: Qiskit
 import sys
 import io
 
-# Fix Windows console encoding
-if sys.platform == 'win32':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+# Fix Windows console encoding (check if not already wrapped)
+if sys.platform == 'win32' and not isinstance(sys.stdout, io.TextIOWrapper):
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+    except (AttributeError, ValueError):
+        pass  # Already wrapped or can't wrap
 
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit_aer import AerSimulator
@@ -148,12 +151,13 @@ class SuperdenseCoding:
 
         return counts
 
-    def test_all_cases(self, shots=1024):
+    def test_all_cases(self, shots=1024, draw_circuit=False):
         """
         Test all four possible input cases: 00, 01, 10, 11.
 
         Args:
             shots: Number of measurement repetitions per case
+            draw_circuit: Whether to draw circuit diagrams (default: False to avoid encoding issues)
 
         Returns:
             Dictionary containing results for all cases
@@ -170,7 +174,7 @@ class SuperdenseCoding:
             print(f"Testing input: {bits}")
             print(f"{'-' * 70}")
 
-            counts = self.run_protocol(bits, shots=shots, draw_circuit=True)
+            counts = self.run_protocol(bits, shots=shots, draw_circuit=draw_circuit)
 
             # Calculate success rate
             expected_output = bits

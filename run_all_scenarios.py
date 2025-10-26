@@ -12,6 +12,17 @@ Platform: Qiskit
 """
 
 import sys
+import io
+
+# Fix Windows console encoding (do this FIRST, before importing other modules)
+if sys.platform == 'win32' and not isinstance(sys.stdout, io.TextIOWrapper):
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace', line_buffering=True)
+    except AttributeError:
+        # Already wrapped or can't wrap
+        pass
+
 import numpy as np
 from superdense_coding import SuperdenseCoding
 from superdense_noisy import NoisySuperdenseCoding
@@ -39,9 +50,10 @@ def run_ideal_scenario(shots=1024):
     print_header("SCENARIO 1: IDEAL (NOISELESS) SUPERDENSE CODING")
     print("Simulating perfect quantum gates and qubits...")
     print("This represents the theoretical limit of the protocol.\n")
+    print("(Circuit diagrams disabled to avoid encoding issues on Windows)\n")
 
     sdc = SuperdenseCoding()
-    results = sdc.test_all_cases(shots=shots)
+    results = sdc.test_all_cases(shots=shots, draw_circuit=False)
     sdc.print_summary(results)
     sdc.visualize_results(save_fig=True)
 
@@ -68,12 +80,12 @@ def run_noisy_scenario(shots=2048):
 
     # Test different noise levels
     for noise_level in ['low', 'medium', 'high']:
-        print(f"\n{'─' * 80}")
+        print(f"\n{'-' * 80}")
         print(f"Testing with {noise_level.upper()} noise level...")
-        print(f"{'─' * 80}")
+        print(f"{'-' * 80}")
 
         noisy_sdc = NoisySuperdenseCoding(noise_level=noise_level)
-        results = noisy_sdc.test_all_cases(shots=shots)
+        results = noisy_sdc.test_all_cases(shots=shots, draw_circuit=False)
         noisy_sdc.print_summary(results)
 
         if noise_level == 'medium':
@@ -103,14 +115,14 @@ def run_imperfect_gates_scenario(shots=2048):
 
     gate_error = np.radians(5)  # 5 degree error
     imperfect_sdc = ImperfectGateSuperdenseCoding(gate_error_angle=gate_error)
-    results = imperfect_sdc.test_all_cases(shots=shots)
+    results = imperfect_sdc.test_all_cases(shots=shots, draw_circuit=False)
     imperfect_sdc.print_summary(results)
     imperfect_sdc.visualize_imperfect_results(save_fig=True)
 
     # Also show error angle comparison
-    print(f"\n{'─' * 80}")
+    print(f"\n{'-' * 80}")
     print("Analyzing impact of different gate error magnitudes...")
-    print(f"{'─' * 80}\n")
+    print(f"{'-' * 80}\n")
 
     comparison = imperfect_sdc.compare_gate_errors(
         bits='11',
@@ -157,7 +169,7 @@ def print_protocol_explanation():
     print_header("SUPERDENSE CODING PROTOCOL EXPLANATION")
 
     print("What is Superdense Coding?")
-    print("─" * 80)
+    print("-" * 80)
     print("""
 Superdense coding is a quantum communication protocol that demonstrates
 quantum advantage over classical communication. It allows two parties
@@ -212,14 +224,14 @@ def print_results_summary():
     """Print expected results summary."""
     print_header("EXPECTED RESULTS SUMMARY")
 
-    print("┌────────────┬──────────────┬─────────────┬──────────────────────────┐")
-    print("│ Input Bits │ Gates Applied│   Output    │         Results          │")
-    print("├────────────┼──────────────┼─────────────┼──────────────────────────┤")
-    print("│     00     │      I       │     00      │ Success in all cases     │")
-    print("│     01     │      X       │     01      │ High-fidelity recovery   │")
-    print("│     10     │      Z       │     10      │ Robust in simulation     │")
-    print("│     11     │      ZX      │     11      │ Some hardware noise      │")
-    print("└────────────┴──────────────┴─────────────┴──────────────────────────┘")
+    print("+------------+--------------+-------------+--------------------------+")
+    print("| Input Bits | Gates Applied|   Output    |         Results          |")
+    print("+------------+--------------+-------------+--------------------------+")
+    print("|     00     |      I       |     00      | Success in all cases     |")
+    print("|     01     |      X       |     01      | High-fidelity recovery   |")
+    print("|     10     |      Z       |     10      | Robust in simulation     |")
+    print("|     11     |      ZX      |     11      | Some hardware noise      |")
+    print("+------------+--------------+-------------+--------------------------+")
 
     print("\n  Ideal Case:           100% success rate (perfect transmission)")
     print("  Noisy Case:           80-95% success rate (realistic noise)")
@@ -229,10 +241,10 @@ def print_results_summary():
 
 def main():
     """Main function to run all demonstrations."""
-    print("\n" + "╔" + "═" * 78 + "╗")
-    print("║" + "SUPERDENSE CODING: COMPREHENSIVE DEMONSTRATION".center(78) + "║")
-    print("║" + "Implementation of Quantum Communication Protocol".center(78) + "║")
-    print("╚" + "═" * 78 + "╝")
+    print("\n" + "+" + "=" * 78 + "+")
+    print("|" + "SUPERDENSE CODING: COMPREHENSIVE DEMONSTRATION".center(78) + "|")
+    print("|" + "Implementation of Quantum Communication Protocol".center(78) + "|")
+    print("+" + "=" * 78 + "+")
 
     # Print protocol explanation
     print_protocol_explanation()
